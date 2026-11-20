@@ -299,6 +299,7 @@ export function startCuratorServer(
 		if (provider === "kimi") return availableProviders.kimi;
 		if (provider === "anysearch") return availableProviders.anysearch;
 		if (provider === "xai") return availableProviders.xai;
+		if (provider === "anthropic") return availableProviders.anthropic;
 		if (provider === "mistral") return availableProviders.mistral;
 		if (provider === "you") return availableProviders.you;
 		if (provider === "baizhi") return availableProviders.baizhi;

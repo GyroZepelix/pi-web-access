@@ -38,6 +38,7 @@ function buildProviderButtons(
 		{ value: "kimi", label: "Kimi", available: available.kimi },
 		{ value: "anysearch", label: "AnySearch", available: available.anysearch },
 		{ value: "xai", label: "xAI", available: available.xai },
+		{ value: "anthropic", label: "Anthropic", available: available.anthropic },
 		{ value: "mistral", label: "Mistral", available: available.mistral },
 		{ value: "you", label: "You.com", available: available.you },
 		{ value: "baizhi", label: "Baizhi", available: available.baizhi },
@@ -692,6 +693,11 @@ main {
   color: #c4b5fd;
   background: rgba(196, 181, 253, 0.14);
   border-color: rgba(196, 181, 253, 0.3);
+}
+.provider-tag.provider-anthropic {
+  color: #f0a875;
+  background: rgba(240, 168, 117, 0.14);
+  border-color: rgba(240, 168, 117, 0.3);
 }
 .provider-tag.provider-openai {
   color: #a6e3a1;
@@ -1462,7 +1468,7 @@ const SCRIPT = `(function() {
   var token = DATA.sessionToken;
   var timeoutSec = DATA.timeout;
   var queries = Array.isArray(DATA.queries) ? DATA.queries : [];
-  var providers = ["auto", "all", "openai", "exa", "brave", "parallel", "parallel-mcp", "tinyfish", "searchinfinity", "querit", "tavily", "firecrawl", "jina", "kagi", "bocha", "ollama", "searxng", "degoog", "duckduckgo", "perplexity", "gemini", "kimi", "anysearch", "xai", "mistral", "valyu", "baizhi", "you", "zai", "keenable", "ceramic", "deepseek", "linkup", "ninerouter", "cloudflare", "tabstack"];
+  var providers = ["auto", "all", "openai", "exa", "brave", "parallel", "parallel-mcp", "tinyfish", "searchinfinity", "querit", "tavily", "firecrawl", "jina", "kagi", "bocha", "ollama", "searxng", "degoog", "duckduckgo", "perplexity", "gemini", "kimi", "anysearch", "xai", "anthropic", "mistral", "valyu", "baizhi", "you", "zai", "keenable", "ceramic", "deepseek", "linkup", "ninerouter", "cloudflare", "tabstack"];
   var availProviders = DATA.availableProviders && typeof DATA.availableProviders === "object" ? DATA.availableProviders : {};
   // Custom provider names come from config; they are selectable like built-ins and labeled with their name.
   var customProviders = Array.isArray(availProviders.customProviders) ? availProviders.customProviders : [];
@@ -1693,6 +1699,7 @@ const SCRIPT = `(function() {
     if (provider === "kimi") return "Kimi";
     if (provider === "anysearch") return "AnySearch";
     if (provider === "xai") return "xAI";
+    if (provider === "anthropic") return "Anthropic";
     if (provider === "mistral") return "Mistral";
     if (provider === "you") return "You.com";
     if (provider === "baizhi") return "Baizhi";

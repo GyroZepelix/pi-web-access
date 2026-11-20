@@ -24,6 +24,7 @@ import {
 	type SearchProviderSelection,
 } from "./gemini-search.ts";
 import { isOpenAISearchAvailable } from "./openai-search.ts";
+import { isAnthropicSearchAvailable } from "./anthropic-search.ts";
 import type { SearchResult } from "./perplexity.ts";
 import { getWebSearchConfigPath, runWithProxy } from "./utils.ts";
 import { deleteResult, generateId, getResult, storeResult, type QueryResultData, type StoredSearchData } from "./storage.ts";
@@ -79,6 +80,7 @@ export interface WebSearchConfig {
 	degoogEngines?: unknown;
 	degoogHeaders?: unknown;
 	xaiApiKey?: unknown;
+	anthropicApiKey?: unknown;
 	provider?: unknown;
 	searchProvider?: unknown;
 	workflow?: string;
@@ -1714,6 +1716,17 @@ async function standaloneProviderRejection(requested: unknown): Promise<string |
 		}
 		if (!available) {
 			return `OpenAI search over MCP needs an API key: set openaiApiKey in ${WEB_SEARCH_CONFIG_PATH} or OPENAI_API_KEY. ChatGPT/Codex sign-in, openaiUseProviderBaseUrl, and Pi model credentials work only inside Pi.`;
+		}
+	}
+	if (explicit.includes("anthropic")) {
+		let available: boolean;
+		try {
+			available = await isAnthropicSearchAvailable();
+		} catch {
+			return undefined; // The core reports the same configuration error.
+		}
+		if (!available) {
+			return `Anthropic search over MCP needs an API key: set anthropicApiKey in ${WEB_SEARCH_CONFIG_PATH} or ANTHROPIC_API_KEY. Pi's /login anthropic (Claude subscription) works only inside Pi.`;
 		}
 	}
 	return undefined;

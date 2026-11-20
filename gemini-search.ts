@@ -37,6 +37,7 @@ import { isDegoogAvailable, searchWithDegoog } from "./degoog.ts";
 import { isDuckDuckGoAvailable, searchWithDuckDuckGo } from "./duckduckgo.ts";
 import { isAnySearchAvailable, searchWithAnySearch } from "./anysearch.ts";
 import { isXaiSearchAvailable, searchWithXai } from "./xai-search.ts";
+import { isAnthropicSearchAvailable, searchWithAnthropic } from "./anthropic-search.ts";
 import { isBaizhiAvailable, searchWithBaizhi } from "./baizhi.ts";
 import { isZaiAvailable, searchWithZai } from "./zai.ts";
 import { isValyuAvailable, searchWithValyu } from "./valyu.ts";
@@ -51,7 +52,7 @@ import { isMistralAvailable, searchWithMistral } from "./mistral-search.ts";
 import { isCustomSearchProviderAvailable, parseCustomSearchProviders, searchWithCustomProvider, type CustomSearchProviderConfig } from "./custom-search.ts";
 import { getWebSearchConfigPath } from "./utils.ts";
 
-export const RESOLVED_SEARCH_PROVIDERS = ["openai", "brave", "parallel", "parallel-mcp", "tinyfish", "searchinfinity", "querit", "tavily", "you", "firecrawl", "jina", "searxng", "degoog", "duckduckgo", "perplexity", "gemini", "kimi", "exa", "kagi", "ollama", "anysearch", "xai", "mistral", "valyu", "bocha", "baizhi", "zai", "keenable", "ceramic", "deepseek", "linkup", "ninerouter", "cloudflare", "tabstack"] as const;
+export const RESOLVED_SEARCH_PROVIDERS = ["openai", "brave", "parallel", "parallel-mcp", "tinyfish", "searchinfinity", "querit", "tavily", "you", "firecrawl", "jina", "searxng", "degoog", "duckduckgo", "perplexity", "gemini", "kimi", "exa", "kagi", "ollama", "anysearch", "xai", "anthropic", "mistral", "valyu", "bocha", "baizhi", "zai", "keenable", "ceramic", "deepseek", "linkup", "ninerouter", "cloudflare", "tabstack"] as const;
 // Former built-in providers. Naming one fails with a pointer to its custom-provider recipe
 // instead of falling back to `auto`, unless customSearchProviders defines that name.
 export const REMOVED_SEARCH_PROVIDERS = ["serper", "serpapi", "serply", "searchapi", "serpbase", "autom", "cloro", "xcrawl", "serpdive", "search1api", "outcrawl", "sofya", "specstream", "brightdata"] as const;
@@ -126,7 +127,7 @@ export interface AttributedSearchResponse extends SearchResponse {
 
 const CONFIG_PATH = getWebSearchConfigPath();
 const DEFAULT_SEARCH_MODEL = "gemini-3.6-flash";
-// Explicit-only providers (Parallel MCP, degoog, DuckDuckGo, Kimi, AnySearch, xAI, Mistral, You.com, Valyu, Baizhi, Z.ai, Keenable, Ceramic, DeepSeek, Linkup, 9router, Cloudflare, Tabstack, and custom providers) are deliberately absent:
+// Explicit-only providers (Parallel MCP, degoog, DuckDuckGo, Kimi, AnySearch, xAI, Anthropic, Mistral, You.com, Valyu, Baizhi, Z.ai, Keenable, Ceramic, DeepSeek, Linkup, 9router, Cloudflare, Tabstack, and custom providers) are deliberately absent:
 // `all` must never fan out to an opt-in or paid provider without the user asking for it.
 export const ALL_SEARCH_PROVIDERS: BuiltinSearchProvider[] = ["searxng", "openai", "exa", "brave", "parallel", "tinyfish", "searchinfinity", "querit", "tavily", "firecrawl", "jina", "kagi", "ollama", "perplexity", "gemini", "bocha"];
 const VALID_ROUTING_KINDS = ["transient", "quota", "network", "invalid-response", "unsupported", "empty", "domain-miss", "off-topic"] as const;
@@ -362,10 +363,10 @@ export function validateSearchModelOverride(provider: unknown, model: unknown): 
 	}
 	const selected = parseProviderArgument(provider);
 	if (selected === undefined || Array.isArray(selected) || selected === "auto" || selected === "all") {
-		throw new Error("model requires one explicit provider: openai, xai, mistral, or gemini (API only); omitted, auto, all, and provider lists are ambiguous");
+		throw new Error("model requires one explicit provider: openai, xai, anthropic, mistral, or gemini (API only); omitted, auto, all, and provider lists are ambiguous");
 	}
-	if (!["openai", "xai", "mistral", "gemini"].includes(selected)) {
-		throw new Error(`model is not supported for provider ${JSON.stringify(selected)}; use openai, xai, mistral, or gemini (API only)`);
+	if (!["openai", "xai", "anthropic", "mistral", "gemini"].includes(selected)) {
+		throw new Error(`model is not supported for provider ${JSON.stringify(selected)}; use openai, xai, anthropic, mistral, or gemini (API only)`);
 	}
 	assertSearchProviderSelectionAllowed(selected, "Requested provider");
 	return model.trim();
@@ -543,6 +544,7 @@ async function searchWithResolvedProvider(
 	if (provider === "ollama") return { ...(await searchWithOllama(query, options)), provider };
 	if (provider === "anysearch") return { ...(await searchWithAnySearch(query, options)), provider };
 	if (provider === "xai") return { ...(await searchWithXai(query, options, options.extensionContext)), provider };
+	if (provider === "anthropic") return { ...(await searchWithAnthropic(query, options, options.extensionContext)), provider };
 	if (provider === "mistral") return { ...(await searchWithMistral(query, options)), provider };
 	if (provider === "baizhi") return { ...(await searchWithBaizhi(query, options)), provider };
 	if (provider === "zai") return { ...(await searchWithZai(query, options)), provider };
@@ -596,6 +598,7 @@ async function isResolvedProviderAvailable(provider: ResolvedSearchProvider, opt
 	if (provider === "ollama") return isOllamaAvailable();
 	if (provider === "anysearch") return isAnySearchAvailable();
 	if (provider === "xai") return isXaiSearchAvailable(options.extensionContext);
+	if (provider === "anthropic") return isAnthropicSearchAvailable(options.extensionContext);
 	if (provider === "mistral") return isMistralAvailable();
 	if (provider === "baizhi") return isBaizhiAvailable();
 	if (provider === "zai") return isZaiAvailable();
@@ -640,6 +643,7 @@ export function providerLabel(provider: ResolvedSearchProvider): string {
 	if (provider === "kimi") return "Kimi";
 	if (provider === "ollama") return "Ollama";
 	if (provider === "xai") return "xAI";
+	if (provider === "anthropic") return "Anthropic";
 	if (provider === "mistral") return "Mistral";
 	if (provider === "you") return "You.com";
 	if (provider === "baizhi") return "Baizhi";
@@ -679,7 +683,7 @@ async function searchWithProviders(
 			: await isResolvedProviderAvailable(provider, options),
 	})))).filter((entry) => entry.available).map((entry) => entry.provider);
 	if (providers.length === 0) {
-		throw new Error("No configured search provider available for provider \"all\". Parallel MCP, degoog, DuckDuckGo, Kimi, AnySearch, xAI, Mistral, You.com, Valyu, Baizhi, Z.ai, Keenable, Ceramic, DeepSeek, Linkup, 9router, Cloudflare, Tabstack, and custom providers are excluded.");
+		throw new Error("No configured search provider available for provider \"all\". Parallel MCP, degoog, DuckDuckGo, Kimi, AnySearch, xAI, Anthropic, Mistral, You.com, Valyu, Baizhi, Z.ai, Keenable, Ceramic, DeepSeek, Linkup, 9router, Cloudflare, Tabstack, and custom providers are excluded.");
 	}
 
 	const settled = await Promise.allSettled(
@@ -923,7 +927,7 @@ export async function search(query: string, options: FullSearchOptions = {}): Pr
 		"  3. Set OPENAI_API_KEY, BRAVE_API_KEY, PARALLEL_API_KEY, TINYFISH_API_KEY, SEARCHINFINITY_API_KEY, QUERIT_API_KEY, TAVILY_API_KEY, FIRECRAWL_BASE_URL, JINA_API_KEY, KAGI_API_KEY, BOCHA_API_KEY, OLLAMA_API_KEY, SEARXNG_BASE_URL, EXA_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY, or CLOUDFLARE_API_KEY env vars\n" +
 		"  4. Set GOOGLE_GEMINI_BASE_URL with CLOUDFLARE_API_KEY for Cloudflare AI Gateway routing\n" +
 		"  5. Sign into gemini.google.com in a supported Chromium-based browser\n" +
-		"  6. Explicitly select provider: \"anysearch\" for anonymous AnySearch, \"xai\" for Grok, \"mistral\" for Mistral Conversations web search, \"you\" for You.com, \"zai\" for Z.ai GLM Coding Plan search, \"valyu\" for research search, \"keenable\" for keyless Keenable search, \"ceramic\" for Ceramic search, \"deepseek\" for DeepSeek search, \"linkup\" for Linkup search, \"ninerouter\" for a 9router gateway, \"cloudflare\" for the Cloudflare Web Search API, \"tabstack\" for Tabstack Research, or a custom provider from customSearchProviders"
+		"  6. Explicitly select provider: \"anysearch\" for anonymous AnySearch, \"xai\" for Grok, \"anthropic\" for Claude web search, \"mistral\" for Mistral Conversations web search, \"you\" for You.com, \"zai\" for Z.ai GLM Coding Plan search, \"valyu\" for research search, \"keenable\" for keyless Keenable search, \"ceramic\" for Ceramic search, \"deepseek\" for DeepSeek search, \"linkup\" for Linkup search, \"ninerouter\" for a 9router gateway, \"cloudflare\" for the Cloudflare Web Search API, \"tabstack\" for Tabstack Research, or a custom provider from customSearchProviders"
 	);
 }
 

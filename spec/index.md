@@ -11,7 +11,6 @@ Repository-local planning and execution artifacts.
 <!-- spec-items:active:start -->
 | Item | Kind | Status | Updated |
 | --- | --- | --- | --- |
-| [Add Anthropic web search provider](./active/261120-1135-add-anthropic-web-search-provider/plan.md) | work-item | planned | 2026-11-20 |
 <!-- spec-items:active:end -->
 
 ## Archive
@@ -19,6 +18,7 @@ Repository-local planning and execution artifacts.
 <!-- spec-items:archive:start -->
 | Item | Kind | Status | Updated |
 | --- | --- | --- | --- |
+| [Add Anthropic web search provider](./archive/261120-1135-add-anthropic-web-search-provider/plan.md) | work-item | completed | 2026-11-20 |
 <!-- spec-items:archive:end -->
 
 ## Templates

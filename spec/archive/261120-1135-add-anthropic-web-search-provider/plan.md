@@ -61,28 +61,30 @@ Add a built-in `web_search` provider named `anthropic` that runs Anthropic's ser
 | D3 | Model | Fixed list `claude-haiku-5-5` then `claude-sonnet-5-5` | Registry ordering misreports "latest"; user chose Haiku 5.5 | User answer; pi-ai catalog | New Claude generation ships |
 | D4 | Tool version | `web_search_20250305` default, configurable | Cleanest source list, widest support | Anthropic docs | Dynamic filtering becomes needed |
 | D5 | MCP | API-key path only, OpenAI-style rejection message otherwise | Matches existing standalone behavior | `web-tool-core.ts` `standaloneProviderRejection` | Never, unless MCP gains Pi auth |
+| D6 | Implementation (T02) | The web_search `model` param description changes from `Model ID; needs provider <list>` to `Model ID for <list>` (list now includes `anthropic`); only the directly affected expectations in `test/tool-registration-config.test.mjs` (that description and the web_search compatibility hash) are updated; the 4400-char size budget is unchanged | Adding `anthropic, ` pushed default tool definitions to 4410 chars over the 4400 budget; shorter wording keeps the budget (4398) and the meaning | Gamemaster answer during Implement; `test/tool-definition-size.test.mjs` | The size budget or model allowlist changes again |
+| D7 | Implementation (T01) | On the registry path a model override the registry knows is used as is; an unknown id reuses the authenticated preference-list model's settings with the requested id | Mirrors xAI sending an override id with the registry credential, so new Claude ids work before Pi's catalog lists them | `anthropic-search.ts` `selectRegistryModel` | Pi rejects synthesized model objects |
 
 ## Work breakdown
 
-- [ ] T01: Provider module and parser
+- [x] T01: Provider module and parser
   - Depends on: none
   - Scope: `anthropic-search.ts` with config parsing (`anthropicApiKey`, `anthropicSearchModel`, `anthropicSearchToolVersion`, `anthropicSearchMaxUses`, `anthropicSearchTimeoutMs`), registry and API-key paths, block parser, typed errors.
   - Expected areas: `anthropic-search.ts`, `credential-source.ts` usage only.
   - Acceptance: R1, R2, R4-R7 behave as specified under unit tests.
   - Verification: `npm test -- test/anthropic-provider.test.mjs`
-- [ ] T02: Registration and routing
+- [x] T02: Registration and routing
   - Depends on: T01
   - Scope: add `anthropic` to shared lists, dispatch, availability, labels, help text, per-call model allowlist, allowed providers, curator page/server, and MCP rejection message; keep it out of `ALL_SEARCH_PROVIDERS` and auto.
   - Expected areas: `gemini-search.ts`, `index.ts`, `web-tool-core.ts`, `curator-page.ts`, `curator-server.ts`.
   - Acceptance: R3, R8; existing provider tests unchanged.
   - Verification: `npm test`, `npm run typecheck`
-- [ ] T03: Documentation
+- [x] T03: Documentation
   - Depends on: T02
   - Scope: README provider lists, explicit-only list, config keys, auth order, subscription and MCP notes; CHANGELOG `Unreleased` entry if that section exists.
   - Expected areas: `README.md`, `CHANGELOG.md`.
   - Acceptance: R9.
   - Verification: manual read-through.
-- [ ] T04: Live check
+- [x] T04: Live check
   - Depends on: T02
   - Scope: one real search with the user's Pi Anthropic login after explicit user approval, by loading the fork with `pi -e <fork>/index.ts` and calling `web_search({ query, provider: "anthropic" })`.
   - Acceptance: returns an answer and at least one source; no "extra usage" 400.
@@ -118,8 +120,8 @@ Add a built-in `web_search` provider named `anthropic` that runs Anthropic's ser
 ## Progress
 
 - [x] Planning complete and confirmed.
-- [ ] Implementation not started.
-- [ ] Verification not run.
+- [x] Implementation complete (T01-T04); see Decision Log D6 and D7.
+- [x] Verification passed: `npm test` 1503/1503, `npm run typecheck` clean, contract-quality review PASS, T04 live search returned an answer and 9 sources. Evidence: `verification.md`.
 
 ## Execution handoff
 

@@ -61,6 +61,7 @@ import { isDegoogAvailable } from "./degoog.ts";
 import { isDuckDuckGoAvailable } from "./duckduckgo.ts";
 import { isAnySearchAvailable } from "./anysearch.ts";
 import { isXaiSearchAvailable } from "./xai-search.ts";
+import { isAnthropicSearchAvailable } from "./anthropic-search.ts";
 import { isMistralAvailable } from "./mistral-search.ts";
 import { isKimiSearchAvailable } from "./kimi-search.ts";
 import { isKeenableAvailable } from "./keenable.ts";
@@ -352,6 +353,7 @@ async function getProviderAvailability(ctx: ExtensionContext): Promise<ProviderA
 		kimi: allowedProviders.has("kimi") && await isKimiSearchAvailable(ctx),
 		anysearch: allowedProviders.has("anysearch") && isAnySearchAvailable(),
 		xai: allowedProviders.has("xai") && await isXaiSearchAvailable(ctx),
+		anthropic: allowedProviders.has("anthropic") && await isAnthropicSearchAvailable(ctx),
 		mistral: allowedProviders.has("mistral") && isMistralAvailable(),
 		baizhi: allowedProviders.has("baizhi") && isBaizhiAvailable(),
 		zai: allowedProviders.has("zai") && isZaiAvailable(),
@@ -757,7 +759,7 @@ export default function (pi: ExtensionAPI) {
 		throw new Error(`toolActivation "none" in ${WEB_SEARCH_CONFIG_PATH} requires toolExposure "deferred"`);
 	}
 	const allowedSearchProviders = initConfig.webSearch?.allowedProviders === undefined ? RESOLVED_SEARCH_PROVIDERS : getAllowedSearchProviders();
-	const modelProviders = allowedSearchProviders.filter(provider => provider === "openai" || provider === "xai" || provider === "mistral" || provider === "gemini");
+	const modelProviders = allowedSearchProviders.filter(provider => provider === "openai" || provider === "xai" || provider === "anthropic" || provider === "mistral" || provider === "gemini");
 	// Depends on config only, never on credentials, so definitions stay byte-stable across environments.
 	const providerDescription = `auto, all, a name, or comma-separated names; omit for the configured default.${initConfig.webSearch?.allowedProviders === undefined ? "" : ` Allowed: ${allowedSearchProviders.join(", ")}.`}`;
 	const curatorRunState = registerCuratorRunLifecycle(pi);
@@ -1430,7 +1432,7 @@ export default function (pi: ExtensionAPI) {
 			recencyFilter: Type.Optional(StringEnum(["day", "week", "month", "year"])),
 			domainFilter: Type.Optional(Type.Array(Type.String(), { description: "Prefix - to exclude" })),
 			category: Type.Optional(Type.String({ description: "Exa only, e.g. news" })),
-			...(modelProviders.length > 0 ? { model: Type.Optional(Type.String({ description: `Model ID; needs provider ${modelProviders.join(", ")}` })) } : {}) as { model: TOptional<TString> },
+			...(modelProviders.length > 0 ? { model: Type.Optional(Type.String({ description: `Model ID for ${modelProviders.join(", ")}` })) } : {}) as { model: TOptional<TString> },
 			provider: Type.Optional(Type.String({ description: providerDescription })),
 			workflow: Type.Optional(
 				StringEnum(["none", "summary-review", "auto-summary"], {
