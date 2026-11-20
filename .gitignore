@@ -3,3 +3,5 @@ bun.lock
 .pi/
 .pi-subagents/
 dist/
+.DS_Store
+__pycache__/
